@@ -1,5 +1,7 @@
 package com.fingard.xuesl.im.client;
 
+import com.fingard.xuesl.im.client.handler.ClientLoginHandler;
+import com.fingard.xuesl.im.codec.PacketEncoder;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
@@ -30,7 +32,7 @@ public class IMClient {
     }
 
 
-    public void connect() {
+    private void connect() {
         Bootstrap bootstrap = new Bootstrap();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
 
@@ -38,8 +40,9 @@ public class IMClient {
                 .channel(NioSocketChannel.class)
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
-                    protected void initChannel(SocketChannel socketChannel) throws Exception {
-                        //TODO
+                    protected void initChannel(SocketChannel socketChannel) {
+                        socketChannel.pipeline().addLast(new PacketEncoder());
+                        socketChannel.pipeline().addLast(new ClientLoginHandler());
                     }
                 });
 
@@ -54,7 +57,7 @@ public class IMClient {
         }
     }
 
-    public void connect(final Bootstrap bootstrap, final String host, final int port, final int retryTimes) {
+    private void connect(final Bootstrap bootstrap, final String host, final int port, final int retryTimes) {
         bootstrap.connect(host, port).addListener(channelFuture -> {
             if (channelFuture.isSuccess()) {
                 log.info("IM客户端连接成功！");

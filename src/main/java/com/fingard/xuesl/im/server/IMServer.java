@@ -1,8 +1,8 @@
 package com.fingard.xuesl.im.server;
 
+import com.fingard.xuesl.im.codec.PacketDecoder;
+import com.fingard.xuesl.im.server.handler.ServerLoginHandler;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -26,14 +26,15 @@ public class IMServer {
                 .channel(NioServerSocketChannel.class)
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
-                    protected void initChannel(SocketChannel socketChannel) throws Exception {
-                        //TODO
+                    protected void initChannel(SocketChannel socketChannel) {
+                        socketChannel.pipeline().addLast(new PacketDecoder());
+                        socketChannel.pipeline().addLast(new ServerLoginHandler());
                     }
                 });
         bind(serverBootstrap, 8080);
     }
 
-    public static void bind(final ServerBootstrap serverBootstrap, final int port) {
+    private static void bind(final ServerBootstrap serverBootstrap, final int port) {
         serverBootstrap.bind(port).addListener(channelFuture -> {
             if (channelFuture.isSuccess()) {
                 log.info("IM服务器在端口[" + port + "]绑定成功!");
