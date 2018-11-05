@@ -4,6 +4,7 @@ import com.fingard.xuesl.im.protocol.request.LoginRequest;
 import com.fingard.xuesl.im.protocol.request.LoginResponse;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.util.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -26,6 +27,7 @@ public class ClientLoginHandler extends SimpleChannelInboundHandler<LoginRespons
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, LoginResponse loginResponse) {
         if (loginResponse.isSuccess()) {
+            channelHandlerContext.channel().attr(AttributeKey.newInstance("login")).set(true);
             log.info("登录成功！");
         } else {
             log.info("登录失败，原因：" + loginResponse.getInfo());
