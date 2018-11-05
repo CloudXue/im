@@ -1,6 +1,7 @@
 package com.fingard.xuesl.im.client;
 
 import com.fingard.xuesl.im.client.handler.ClientLoginHandler;
+import com.fingard.xuesl.im.codec.PacketDecoder;
 import com.fingard.xuesl.im.codec.PacketEncoder;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelInitializer;
@@ -42,6 +43,7 @@ public class IMClient {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) {
                         socketChannel.pipeline().addLast(new PacketEncoder());
+                        socketChannel.pipeline().addLast(new PacketDecoder());
                         socketChannel.pipeline().addLast(new ClientLoginHandler());
                     }
                 });

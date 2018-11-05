@@ -34,6 +34,7 @@ public class ServerLoginHandler extends SimpleChannelInboundHandler<LoginRequest
                 log.info("消息发送成功！");
             } else {
                 log.info("消息发送失败！原因：" + future.cause().getMessage());
+                future.cause().printStackTrace();
             }
         });
     }

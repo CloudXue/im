@@ -1,6 +1,7 @@
 package com.fingard.xuesl.im.server;
 
 import com.fingard.xuesl.im.codec.PacketDecoder;
+import com.fingard.xuesl.im.codec.PacketEncoder;
 import com.fingard.xuesl.im.server.handler.ServerLoginHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
@@ -27,6 +28,7 @@ public class IMServer {
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) {
+                        socketChannel.pipeline().addLast(new PacketEncoder());
                         socketChannel.pipeline().addLast(new PacketDecoder());
                         socketChannel.pipeline().addLast(new ServerLoginHandler());
                     }
