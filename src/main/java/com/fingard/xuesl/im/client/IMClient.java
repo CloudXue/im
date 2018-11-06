@@ -1,16 +1,24 @@
 package com.fingard.xuesl.im.client;
 
 import com.fingard.xuesl.im.client.handler.ClientLoginHandler;
+import com.fingard.xuesl.im.client.handler.ClientMessageHandler;
 import com.fingard.xuesl.im.codec.PacketDecoder;
 import com.fingard.xuesl.im.codec.PacketEncoder;
+import com.fingard.xuesl.im.protocol.Attributes;
+import com.fingard.xuesl.im.protocol.request.MessageRequest;
 import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Scanner;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -20,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class IMClient {
     private static final String HOST = "127.0.0.1";
-    private static final int PORT = 8080;
+    private static final int PORT = 8082;
     private static final int MAX_RETRY_TIMES = 5;
     /**
      * 连接状态{0:连接中|-1:连接失败|1-连接成功}
@@ -43,8 +51,10 @@ public class IMClient {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) {
                         socketChannel.pipeline().addLast(new PacketEncoder());
+                        socketChannel.pipeline().addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 7, 4));
                         socketChannel.pipeline().addLast(new PacketDecoder());
                         socketChannel.pipeline().addLast(new ClientLoginHandler());
+                        socketChannel.pipeline().addLast(new ClientMessageHandler());
                     }
                 });
 
@@ -64,6 +74,7 @@ public class IMClient {
             if (channelFuture.isSuccess()) {
                 log.info("IM客户端连接成功！");
                 successFlag = 1;
+                startConsoleThread(((ChannelFuture) channelFuture).channel());
             } else {
                 log.info("连接失败，原因：" + channelFuture.cause().getMessage());
                 if (retryTimes == 0) {
@@ -78,6 +89,29 @@ public class IMClient {
                 log.info("第" + times + "次重试将于" + delay + "秒后进行！");
                 bootstrap.config().group().schedule(() -> connect(bootstrap, host, port, retryTimes - 1), delay, TimeUnit.SECONDS);
             }
+        });
+    }
+
+    private void startConsoleThread(Channel channel) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            while (!Thread.interrupted()) {
+                if (channel.attr(Attributes.LOGIN).get() != null) {
+                    System.out.println("输入消息: ");
+                    Scanner scanner = new Scanner(System.in);
+                    String message = scanner.nextLine();
+
+                    MessageRequest messageRequest = new MessageRequest();
+                    messageRequest.setMessage(message);
+                    channel.writeAndFlush(messageRequest);
+                }
+            }
+
+            //TODO 拆包沾包测试
+//            for (int i = 0;i<100;i++) {
+//                MessageRequest messageRequest = new MessageRequest();
+//                messageRequest.setMessage("这是一条测试拆包粘包的测试数据，我得让消息再长点才好产生现象。");
+//                channel.writeAndFlush(messageRequest);
+//            }
         });
     }
 }

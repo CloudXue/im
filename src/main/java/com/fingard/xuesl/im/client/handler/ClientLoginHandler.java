@@ -1,10 +1,10 @@
 package com.fingard.xuesl.im.client.handler;
 
+import com.fingard.xuesl.im.protocol.Attributes;
 import com.fingard.xuesl.im.protocol.request.LoginRequest;
 import com.fingard.xuesl.im.protocol.request.LoginResponse;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.util.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -19,7 +19,7 @@ public class ClientLoginHandler extends SimpleChannelInboundHandler<LoginRespons
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setUserId("xuesl");
         loginRequest.setUserName("Cloud");
-        loginRequest.setPassword("xxxxxxxx");
+        loginRequest.setPassword("xshlxshl");
 
         ctx.channel().writeAndFlush(loginRequest);
     }
@@ -27,7 +27,7 @@ public class ClientLoginHandler extends SimpleChannelInboundHandler<LoginRespons
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, LoginResponse loginResponse) {
         if (loginResponse.isSuccess()) {
-            channelHandlerContext.channel().attr(AttributeKey.newInstance("login")).set(true);
+            channelHandlerContext.channel().attr(Attributes.LOGIN).set(true);
             log.info("登录成功！");
         } else {
             log.info("登录失败，原因：" + loginResponse.getInfo());

@@ -18,7 +18,7 @@ import java.util.Map;
  */
 public class PacketDecoder extends MessageToMessageDecoder<ByteBuf> {
 
-    private Map<Byte, Class> commandClasses = new HashMap<>();
+    private Map<Byte, Class<?>> commandClasses = new HashMap<>();
 
     public PacketDecoder() {
         commandClasses.put(Command.LOGIN_REQUEST, LoginRequest.class);
@@ -33,6 +33,7 @@ public class PacketDecoder extends MessageToMessageDecoder<ByteBuf> {
         byte serializerType = byteBuf.readByte();
         byte command = byteBuf.readByte();
         int length = byteBuf.readInt();
+        System.out.println(length);
         byte[] bytes = new byte[length];
         byteBuf.readBytes(bytes);
         Object obj = javaSerializer.deserialize(bytes, commandClasses.get(command));
