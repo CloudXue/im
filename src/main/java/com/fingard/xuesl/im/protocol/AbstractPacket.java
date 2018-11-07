@@ -1,13 +1,14 @@
 package com.fingard.xuesl.im.protocol;
 
 import lombok.Data;
-import lombok.Setter;
 
 import java.io.Serializable;
 
 /**
- * @author xuesl
- * @date 2018/10/15
+ * +---------------------------------------------------------------+
+ * | magic number| version | serializer| command | length | content|
+ * +---------------------------------------------------------------+
+ * |      4      |    1    |      1    |    1    |    4   | length |
  */
 @Data
 public abstract class AbstractPacket implements Serializable {

@@ -4,8 +4,10 @@ import com.fingard.xuesl.im.client.handler.ClientLoginHandler;
 import com.fingard.xuesl.im.client.handler.ClientMessageHandler;
 import com.fingard.xuesl.im.codec.PacketDecoder;
 import com.fingard.xuesl.im.codec.PacketEncoder;
+import com.fingard.xuesl.im.codec.PacketFilter;
 import com.fingard.xuesl.im.protocol.Attributes;
 import com.fingard.xuesl.im.protocol.request.MessageRequest;
+import com.fingard.xuesl.im.util.LoginUtil;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -28,10 +30,10 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class IMClient {
     private static final String HOST = "127.0.0.1";
-    private static final int PORT = 8082;
+    private static final int PORT = 8080;
     private static final int MAX_RETRY_TIMES = 5;
     /**
-     * 连接状态{0:连接中|-1:连接失败|1-连接成功}
+     * 连接状态{0:连接中|-1:连接失败|1-连接成功|2-断开连接}
      */
     private volatile int successFlag = 0;
 
@@ -50,11 +52,14 @@ public class IMClient {
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) {
-                        socketChannel.pipeline().addLast(new PacketEncoder());
-                        socketChannel.pipeline().addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 7, 4));
+                        //入站
+                        socketChannel.pipeline().addLast(new PacketFilter());
                         socketChannel.pipeline().addLast(new PacketDecoder());
                         socketChannel.pipeline().addLast(new ClientLoginHandler());
                         socketChannel.pipeline().addLast(new ClientMessageHandler());
+
+                        //出站
+                        socketChannel.pipeline().addLast(new PacketEncoder());
                     }
                 });
 
@@ -74,7 +79,8 @@ public class IMClient {
             if (channelFuture.isSuccess()) {
                 log.info("IM客户端连接成功！");
                 successFlag = 1;
-                startConsoleThread(((ChannelFuture) channelFuture).channel());
+                Channel channel = ((ChannelFuture)channelFuture).channel();
+                startConsoleThread(channel);
             } else {
                 log.info("连接失败，原因：" + channelFuture.cause().getMessage());
                 if (retryTimes == 0) {
@@ -94,8 +100,8 @@ public class IMClient {
 
     private void startConsoleThread(Channel channel) {
         Executors.newSingleThreadExecutor().execute(() -> {
-            while (!Thread.interrupted()) {
-                if (channel.attr(Attributes.LOGIN).get() != null) {
+            while (successFlag == 1) {
+                if (LoginUtil.hasLogin(channel)) {
                     System.out.println("输入消息: ");
                     Scanner scanner = new Scanner(System.in);
                     String message = scanner.nextLine();

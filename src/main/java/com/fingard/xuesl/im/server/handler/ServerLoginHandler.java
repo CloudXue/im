@@ -2,6 +2,7 @@ package com.fingard.xuesl.im.server.handler;
 
 import com.fingard.xuesl.im.protocol.request.LoginRequest;
 import com.fingard.xuesl.im.protocol.request.LoginResponse;
+import com.fingard.xuesl.im.util.LoginUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ public class ServerLoginHandler extends SimpleChannelInboundHandler<LoginRequest
         loginResponse.setUserName(userName);
         if ("xuesl".equals(userId) && "xshlxshl".equals(password)) {
             loginResponse.setSuccess(true);
+            LoginUtil.login(channelHandlerContext.channel());
             channelHandlerContext.channel().writeAndFlush(loginResponse);
         } else {
             loginResponse.setSuccess(false);

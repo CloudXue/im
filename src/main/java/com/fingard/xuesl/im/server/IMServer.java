@@ -2,6 +2,8 @@ package com.fingard.xuesl.im.server;
 
 import com.fingard.xuesl.im.codec.PacketDecoder;
 import com.fingard.xuesl.im.codec.PacketEncoder;
+import com.fingard.xuesl.im.codec.PacketFilter;
+import com.fingard.xuesl.im.server.handler.AuthHandler;
 import com.fingard.xuesl.im.server.handler.ServerLoginHandler;
 import com.fingard.xuesl.im.server.handler.ServerMessageHandler;
 import io.netty.bootstrap.ServerBootstrap;
@@ -30,11 +32,15 @@ public class IMServer {
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) {
-                        socketChannel.pipeline().addLast(new PacketEncoder());
-                        socketChannel.pipeline().addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 7, 4));
+                        //入站
+                        socketChannel.pipeline().addLast(new PacketFilter());
                         socketChannel.pipeline().addLast(new PacketDecoder());
                         socketChannel.pipeline().addLast(new ServerLoginHandler());
+                        socketChannel.pipeline().addLast(new AuthHandler());
                         socketChannel.pipeline().addLast(new ServerMessageHandler());
+
+                        //出站
+                        socketChannel.pipeline().addLast(new PacketEncoder());
                     }
                 });
         bind(serverBootstrap, 8080);

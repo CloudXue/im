@@ -1,8 +1,8 @@
 package com.fingard.xuesl.im.client.handler;
 
-import com.fingard.xuesl.im.protocol.Attributes;
 import com.fingard.xuesl.im.protocol.request.LoginRequest;
 import com.fingard.xuesl.im.protocol.request.LoginResponse;
+import com.fingard.xuesl.im.util.LoginUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -27,11 +27,16 @@ public class ClientLoginHandler extends SimpleChannelInboundHandler<LoginRespons
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, LoginResponse loginResponse) {
         if (loginResponse.isSuccess()) {
-            channelHandlerContext.channel().attr(Attributes.LOGIN).set(true);
+            LoginUtil.login(channelHandlerContext.channel());
             log.info("登录成功！");
         } else {
             log.info("登录失败，原因：" + loginResponse.getInfo());
         }
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) {
+        System.out.println("客户端连接断开！");
     }
 
     @Override
