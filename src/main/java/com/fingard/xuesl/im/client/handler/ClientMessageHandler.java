@@ -1,6 +1,7 @@
 package com.fingard.xuesl.im.client.handler;
 
-import com.fingard.xuesl.im.protocol.request.MessageResponse;
+import cn.hutool.core.util.StrUtil;
+import com.fingard.xuesl.im.protocol.response.MessageResponse;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
@@ -13,6 +14,6 @@ import java.util.Date;
 public class ClientMessageHandler extends SimpleChannelInboundHandler<MessageResponse> {
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, MessageResponse messageResponse) {
-        System.out.println(new Date() + "收到服务端回复: " + messageResponse.getMessage());
+        System.out.println(StrUtil.format(new Date() + "收到{}的消息:{} " , messageResponse.getFromUserName(),messageResponse.getMessage()));
     }
 }

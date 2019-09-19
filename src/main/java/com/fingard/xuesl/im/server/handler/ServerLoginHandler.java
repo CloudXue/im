@@ -1,8 +1,11 @@
 package com.fingard.xuesl.im.server.handler;
 
+import cn.hutool.core.util.RandomUtil;
 import com.fingard.xuesl.im.protocol.request.LoginRequest;
-import com.fingard.xuesl.im.protocol.request.LoginResponse;
+import com.fingard.xuesl.im.protocol.response.LoginResponse;
+import com.fingard.xuesl.im.session.Session;
 import com.fingard.xuesl.im.util.LoginUtil;
+import com.fingard.xuesl.im.util.SessionUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -14,30 +17,27 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ServerLoginHandler extends SimpleChannelInboundHandler<LoginRequest> {
     @Override
-    protected void channelRead0(ChannelHandlerContext channelHandlerContext, LoginRequest loginRequest) {
-        String userId = loginRequest.getUserId();
+    protected void channelRead0(ChannelHandlerContext ctx, LoginRequest loginRequest) {
         String userName = loginRequest.getUserName();
-        String password = loginRequest.getPassword();
-        log.info("用户[" + userName + "]正在登录...");
+        log.info("用户[{}]正在登录...", userName);
 
         LoginResponse loginResponse = new LoginResponse();
-        loginResponse.setUserId(userId);
         loginResponse.setUserName(userName);
-        if ("xuesl".equals(userId) && "xshlxshl".equals(password)) {
+
+        if (checkPassword(loginRequest)) {
             loginResponse.setSuccess(true);
-            LoginUtil.login(channelHandlerContext.channel());
-            channelHandlerContext.channel().writeAndFlush(loginResponse);
+            loginResponse.setUserId(RandomUtil.simpleUUID());
+            LoginUtil.login(ctx.channel());
+            SessionUtil.bindSession(new Session(loginResponse.getUserId(), userName), ctx.channel());
+            log.info("用户[{}]登录成功！", userName);
         } else {
             loginResponse.setSuccess(false);
-            loginResponse.setInfo("用户名或密码错误！");
+            loginResponse.setInfo("密码校验失败！");
         }
-        channelHandlerContext.channel().writeAndFlush(loginResponse).addListener(future -> {
-            if (future.isSuccess()) {
-                log.info("消息发送成功！");
-            } else {
-                log.info("消息发送失败！原因：" + future.cause().getMessage());
-                future.cause().printStackTrace();
-            }
-        });
+        ctx.channel().writeAndFlush(loginResponse);
+    }
+
+    private boolean checkPassword(LoginRequest loginRequest) {
+        return true;
     }
 }

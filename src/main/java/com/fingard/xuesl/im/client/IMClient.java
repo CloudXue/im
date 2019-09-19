@@ -1,10 +1,13 @@
 package com.fingard.xuesl.im.client;
 
-import com.fingard.xuesl.im.client.handler.ClientLoginHandler;
-import com.fingard.xuesl.im.client.handler.ClientMessageHandler;
+import com.fingard.xuesl.im.client.console.ConsoleCommand;
+import com.fingard.xuesl.im.client.console.ConsoleCommandManager;
+import com.fingard.xuesl.im.client.console.LoginConsoleCommand;
+import com.fingard.xuesl.im.client.handler.*;
 import com.fingard.xuesl.im.codec.PacketDecoder;
 import com.fingard.xuesl.im.codec.PacketEncoder;
 import com.fingard.xuesl.im.codec.PacketFilter;
+import com.fingard.xuesl.im.handler.IMIdleStateHandler;
 import com.fingard.xuesl.im.protocol.Attributes;
 import com.fingard.xuesl.im.protocol.request.MessageRequest;
 import com.fingard.xuesl.im.util.LoginUtil;
@@ -52,14 +55,18 @@ public class IMClient {
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) {
-                        //入站
-                        socketChannel.pipeline().addLast(new PacketFilter());
-                        socketChannel.pipeline().addLast(new PacketDecoder());
-                        socketChannel.pipeline().addLast(new ClientLoginHandler());
-                        socketChannel.pipeline().addLast(new ClientMessageHandler());
-
                         //出站
                         socketChannel.pipeline().addLast(new PacketEncoder());
+
+                        //入站
+                        socketChannel.pipeline().addLast(new IMIdleStateHandler());
+                        socketChannel.pipeline().addLast(new PacketFilter());
+                        socketChannel.pipeline().addLast(new PacketDecoder());
+                        socketChannel.pipeline().addLast(new ClientHeartBeatTimerHandler());
+                        socketChannel.pipeline().addLast(new ClientLoginHandler());
+                        socketChannel.pipeline().addLast(new ClientMessageHandler());
+                        socketChannel.pipeline().addLast(new ClientCreateGroupHandler());
+                        socketChannel.pipeline().addLast(new ClientGroupMessageHandler());
                     }
                 });
 
@@ -99,16 +106,15 @@ public class IMClient {
     }
 
     private void startConsoleThread(Channel channel) {
+        ConsoleCommand consoleCommandManager = new ConsoleCommandManager();
+        ConsoleCommand loginConsoleCommand = new LoginConsoleCommand();
+        Scanner scanner = new Scanner(System.in);
         Executors.newSingleThreadExecutor().execute(() -> {
             while (successFlag == 1) {
-                if (LoginUtil.hasLogin(channel)) {
-                    System.out.println("输入消息: ");
-                    Scanner scanner = new Scanner(System.in);
-                    String message = scanner.nextLine();
-
-                    MessageRequest messageRequest = new MessageRequest();
-                    messageRequest.setMessage(message);
-                    channel.writeAndFlush(messageRequest);
+                if (!LoginUtil.hasLogin(channel)) {
+                    loginConsoleCommand.execute(scanner, channel);
+                } else {
+                    consoleCommandManager.execute(scanner, channel);
                 }
             }
 

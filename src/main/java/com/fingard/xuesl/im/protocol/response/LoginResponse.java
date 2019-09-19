@@ -1,4 +1,4 @@
-package com.fingard.xuesl.im.protocol.request;
+package com.fingard.xuesl.im.protocol.response;
 
 import com.fingard.xuesl.im.protocol.AbstractPacket;
 import com.fingard.xuesl.im.protocol.Command;

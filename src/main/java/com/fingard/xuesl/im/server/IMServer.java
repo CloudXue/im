@@ -3,16 +3,14 @@ package com.fingard.xuesl.im.server;
 import com.fingard.xuesl.im.codec.PacketDecoder;
 import com.fingard.xuesl.im.codec.PacketEncoder;
 import com.fingard.xuesl.im.codec.PacketFilter;
-import com.fingard.xuesl.im.server.handler.AuthHandler;
-import com.fingard.xuesl.im.server.handler.ServerLoginHandler;
-import com.fingard.xuesl.im.server.handler.ServerMessageHandler;
+import com.fingard.xuesl.im.handler.IMIdleStateHandler;
+import com.fingard.xuesl.im.server.handler.*;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -32,15 +30,20 @@ public class IMServer {
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) {
+                        //出站
+                        socketChannel.pipeline().addLast(new PacketEncoder());
+
                         //入站
+                        socketChannel.pipeline().addLast(new IMIdleStateHandler());
                         socketChannel.pipeline().addLast(new PacketFilter());
                         socketChannel.pipeline().addLast(new PacketDecoder());
+                        socketChannel.pipeline().addLast(new ServerHeartBeatHandler());
                         socketChannel.pipeline().addLast(new ServerLoginHandler());
                         socketChannel.pipeline().addLast(new AuthHandler());
                         socketChannel.pipeline().addLast(new ServerMessageHandler());
+                        socketChannel.pipeline().addLast(new ServerCreateGroupHandler());
+                        socketChannel.pipeline().addLast(new ServerGroupMessageHandler());
 
-                        //出站
-                        socketChannel.pipeline().addLast(new PacketEncoder());
                     }
                 });
         bind(serverBootstrap, 8080);

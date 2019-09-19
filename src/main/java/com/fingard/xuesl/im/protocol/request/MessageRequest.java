@@ -14,6 +14,8 @@ import lombok.EqualsAndHashCode;
 public class MessageRequest extends AbstractPacket {
     private static final long serialVersionUID = -5848537746304058949L;
 
+    private String toUserId;
+
     private String message;
 
     @Override

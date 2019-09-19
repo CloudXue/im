@@ -13,4 +13,19 @@ public interface Command {
 
     byte MESSAGE_RESPONSE = 4;
 
+    byte LOGOUT_REQUEST = 5;
+
+    byte LOGOUT_RESPONSE = 6;
+
+    byte CREATE_GROUP_REQUEST = 7;
+
+    byte CREATE_GROUP_RESPONSE = 8;
+
+    byte HEARTBEAT_REQUEST = 9;
+
+    byte HEARTBEAT_RESPONSE = 10;
+
+    byte GROUP_MESSAGE_REQUEST = 11;
+
+    byte GROUP_MESSAGE_RESPONSE = 12;
 }

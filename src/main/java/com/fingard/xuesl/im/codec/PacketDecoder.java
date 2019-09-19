@@ -2,7 +2,7 @@ package com.fingard.xuesl.im.codec;
 
 import com.fingard.xuesl.im.protocol.Command;
 import com.fingard.xuesl.im.protocol.request.LoginRequest;
-import com.fingard.xuesl.im.protocol.request.LoginResponse;
+import com.fingard.xuesl.im.protocol.response.LoginResponse;
 import com.fingard.xuesl.im.serialize.JavaSerializer;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -33,7 +33,7 @@ public class PacketDecoder extends MessageToMessageDecoder<ByteBuf> {
         byte serializerType = byteBuf.readByte();
         byte command = byteBuf.readByte();
         int length = byteBuf.readInt();
-        System.out.println(length);
+//        System.out.println(length);
         byte[] bytes = new byte[length];
         byteBuf.readBytes(bytes);
         Object obj = javaSerializer.deserialize(bytes, commandClasses.get(command));
